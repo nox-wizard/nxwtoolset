@@ -1,0 +1,13 @@
+NoX-Wizard Toolset TODO List
+
+
+Near future:
+- Add Windows support.
+- Add a "Settings" form, to choose fonts, colors and so on...
+- Add a "Find in files" functionality.
+- Add a "Replace in files" functionality.
+
+
+Far future:
+- Add XSS support.
+- Add NoX-Wizard remote control.

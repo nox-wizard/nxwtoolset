@@ -1,0 +1,32 @@
+NoX-Wizard Toolset
+by Fabrizio Montesi (Luxor) <luxor@eos-software.it>
+
+Utility for the NoX-Wizard Project, an Ultima Online Server Emulator.
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License 2 as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+-----------------------------------------------------------------------------
+
+NoX-Wizard Toolset also contains portions of code from the Small toolkit.
+
+The software toolkit "Small", the compiler, the abstract machine and the
+documentation, are copyright (c) 1997-2001 by ITB CompuPhase.
+See small_license.txt for more information about this.
+
+-----------------------------------------------------------------------------
+
+You can contact the author by sending email to <luxor@eos-software.it>.
+
+NoX-Wizard and NoX-Wizard Toolset Homepage: http://noxwizard.sourceforge.net
