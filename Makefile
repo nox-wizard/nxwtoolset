@@ -28,18 +28,23 @@ GZIP	=	gzip -9f
 
 ####### Files
 
-HEADERS =	nxwtoolset.h
+HEADERS =	nxwtoolset.h \
+		settings.h
 SOURCES =	amxCompiler.cpp \
 		main.cpp \
+		settings.cpp \
 		nxwtoolset.cpp
 OBJECTS =	amxCompiler.o \
 		main.o \
+		settings.o \
 		nxwtoolset.o
 INTERFACES =	
 UICDECLS =	
 UICIMPLS =	
-SRCMOC	=	moc_nxwtoolset.cpp
-OBJMOC	=	moc_nxwtoolset.o
+SRCMOC	=	moc_nxwtoolset.cpp \
+		moc_settings.cpp
+OBJMOC	=	moc_nxwtoolset.o \
+		moc_settings.o
 DIST	=	
 TARGET	=	nxwtoolset
 INTERFACE_DECL_PATH = .
@@ -100,6 +105,15 @@ amxCompiler.o: amxCompiler.cpp \
 
 main.o: main.cpp \
 		nxwtoolset.h
+
+settings.o: settings.cpp \
+		settings.h
+
+moc_settings.o: moc_settings.cpp \
+		settings.h
+
+moc_settings.cpp: settings.h
+	$(MOC) settings.h -o moc_settings.cpp
 
 nxwtoolset.o: nxwtoolset.cpp \
 		nxwtoolset.h

@@ -3,7 +3,7 @@
                              -------------------
     begin                : Wed Dec 25 15:37:44 CET 2002
     copyright            : (C) 2002 by Fabrizio Montesi
-    email                : luxor@e-vinco.it
+    email                : luxor@eos-software.it
  ***************************************************************************/
 
 /***************************************************************************
@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "nxwtoolset.h"
+#include "settings.h"
 
 QTextEdit *g_compEdit;
 
@@ -23,20 +24,48 @@ QTextEdit *g_compEdit;
 
 NXWToolset::NXWToolset(QApplication *parent, const char *name) : QMainWindow(0, name)
 {
+	//
+	// Maps description
+	//
+	// m_saveMap: stores files that have been modified.
+	// m_funcMap: stores functions documentation. The QStringList contains various informations in its elements.
+	//	1st -> function description
+	//	2nd -> function syntax (the text inserted by a double click)
+	//	3rd -> file where the function is stored, with the following syntax:
+	//		<filename>:<row>
+	// m_constMap: stores constants documentation.
+	//
         m_saveMap = new QMap<QString, bool>;
         m_funcMap = new QMap<QString, QStringList>;
         m_constMap = new QMap<QString, QString>;
         
+        //
+        // Set the application caption
+        //
         setCaption(APPNAME);
-        
+
+        //
+        // Set the initial pointers
+        //
         m_application = parent;
         m_mainTab = NULL;
         m_funcList = NULL;
         m_constList = NULL;
 
+        //
+        // Build up the toolbars and the GUI
+        //
         initBars();
         initGUI();
+
+        //
+        // Load the SMALL data (as documentation)
+        //
         loadData();
+
+        //
+        // Show the window maximized
+        //
         showMaximized();
 }
 
@@ -75,16 +104,38 @@ void NXWToolset::searchLists(const QString& sSearch)
 
 void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
 {
-        /* noxwizard file processing */
-        QFile file(sFilename);
+	QFile file(sFilename);
 
         if ( !file.open( IO_ReadOnly ) ) return;
-        QTextStream ts( &file );
-        QString sLine, sName, sBrief, sParams, sAuthor, sSyntax, sDesc, sFirst, sJoin;
-        bool bSectionFound = false;
-        QStringList slLine, slParams, slFunction;
-        while ((sLine = ts.readLine()) != NULL) {
-                /* Functions parsing */
+	QTextStream ts( &file );
+
+	QString sLine, sLha, sRha, sName, sBrief, sParams, sAuthor, sSyntax, sDesc, sFirst, sJoin;
+	QStringList slLine, slParams, slFunction;
+	bool bSectionFound = false;
+	QRegExp cSep( QString("[\t ]") );
+
+	while ((sLine = ts.readLine()) != NULL) {
+		slLine = QStringList::split(cSep, sLine);
+		sLha = slLine.first();
+
+                //
+                // Look for included files
+                //
+		if ( sLha == "#include" ) {
+			slLine.pop_front();
+			sRha = slLine.first();
+			sRha.remove( "\"" );
+
+			//
+			// Parse the file and go to next line
+			//
+			parseIncludeFile( sRha, sFilter );
+			continue;
+		}
+
+		//
+		// Parse functions documentation
+		//
                 if (sLine == "/*!") {
                         bSectionFound = true;
                         continue;
@@ -104,7 +155,7 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
                         bSectionFound = false;
                         continue;
                 }
-                slLine = QStringList::split(" ", sLine);
+                slLine = QStringList::split(cSep, sLine);
                 sFirst = slLine.first();
                 slLine.remove(sFirst);
                 sJoin = slLine.join(" ");
@@ -118,7 +169,11 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
                 else if (sFirst == "\\author") sAuthor = sJoin;
                 else if (sFirst == "\\syntax") sSyntax = sJoin;
                 else if (sFirst == "\\param") slParams.push_back(sJoin);
-                else if (sFirst == "const" || sFirst == "#define") { /* Constants parsing */
+                
+                //
+                // Constants parsing
+                //
+                else if (sFirst == "const" || sFirst == "#define") {
                         if (slLine.first() == NULL) continue;
                         if (sFilter != NULL)
                                 if (slLine.first().left(sFilter.length()) != sFilter) continue;
@@ -126,6 +181,7 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
                 }
                 
         }
+
         file.close();
 	searchLists(NULL);
 }
@@ -140,34 +196,10 @@ void NXWToolset::loadData(QString sFilter)
 	m_funcMap->clear();
 	m_constMap->clear();
 
-
-	//
-	// Get files included by override.sma
-	//
-	QFile file("small-scripts/override.sma");
-
-        if ( !file.open( IO_ReadOnly ) ) return;
-	QTextStream ts( &file );
-	QString sLine, sLha, sRha;
-	QStringList slLine;
-
-	while ((sLine = ts.readLine()) != NULL) {
-		slLine = QStringList::split(" ", sLine);
-		sLha = slLine.first();
-		if ( sLha != "#include" )
-			continue;
-
-		slLine.pop_front();
-		sRha = slLine.first();
-		sRha.remove( "\"" );
-
-		//
-		// Parse the file
-		//
-		parseIncludeFile( sRha, sFilter );
-	}
-
-	file.close();
+        //
+        // Parse the main small file and its included files recursively
+        //
+        parseIncludeFile( QString("small-scripts/override.sma"), sFilter );
 }
 
 
@@ -327,6 +359,10 @@ void NXWToolset::initBars()
         QAction *actionBuild = new QAction("Build", "&Build", Key_F8, this, "build");
         connect(actionBuild, SIGNAL( activated() ), this, SLOT( smallBuild() ));
         actionBuild->addTo(mnuSmall);
+
+        QAction *actionReloadSmallDefs = new QAction("Reload Definitions", "&Reload Definitions", Key_F6, this, "reload definitions");
+        connect(actionReloadSmallDefs, SIGNAL( activated() ), this, SLOT( loadData() ));
+        actionReloadSmallDefs->addTo(mnuSmall);
 
         /* Options Menu */
         QPopupMenu *mnuOptions = new QPopupMenu(this);
@@ -496,7 +532,7 @@ void NXWToolset::closeCurrFile()
         if ((*m_saveMap)[m_mainTab->currentPage()->name()] == true ||
                 (QString::compare(QString(NEWFILENAME),QString(m_mainTab->currentPage()->name())) == 0 && reinterpret_cast<NXWTextEdit*>(m_mainTab->currentPage())->text() != "")
                 ) {
-                if ( QMessageBox::warning(this, "Question", "The file is new or it has been modified, do you want to save it?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes ) {
+                if ( QMessageBox::warning(this, m_mainTab->currentPage()->name(), "The file is new or it has been modified, do you want to save it?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes ) {
                         saveCurrFile();
                 }
         }
@@ -984,17 +1020,6 @@ int NXWSyntaxHighlighter::highlightParagraph(const QString& sText, int nLastStat
 
 
 /* END -- NoX-Wizard file visualisation widget */
-
-
-/* NoX-Wizard settings dialog */
-
-NXWSettingsDialog::NXWSettingsDialog(NXWToolset *parent, const char *name) : QDialog(parent, name, true)
-{
-	
-}
-
-/* END -- NoX-Wizard settings dialog */
-
 
 /* NoX-Wizard Find And Replace dialog */
 

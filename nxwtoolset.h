@@ -3,7 +3,7 @@
                              -------------------
     begin                : Wed Dec 25 15:37:44 CET 2002
     copyright            : (C) 2002 by Fabrizio Montesi
-    email                : luxor@e-vinco.it
+    email                : luxor@eos-software.it
  ***************************************************************************/
 
 /***************************************************************************
@@ -57,7 +57,6 @@
 #include <qcolor.h>
 
 
-
 extern QTextEdit *g_compEdit;
 int compiler_main(int argc, char **argv);
 
@@ -75,7 +74,6 @@ private:
         void initBars();
         void initGUI();
         void parseIncludeFile(QString sFilename, QString sFilter = NULL);
-        void loadData(QString sFilter = NULL);
         QString m_sFind;
         QString m_sReplace;
         QApplication *m_application;
@@ -113,6 +111,7 @@ public slots:
         void findNext();
         void showFindDialog();
         void showFindReplaceDialog();
+        void loadData(QString sFilter = NULL);
 };
 
 /** NXWTextEdit is the widget loaded to show an opened file, it's inserted into the main tab widget */
@@ -132,13 +131,6 @@ public:
         virtual int highlightParagraph(const QString& sText, int nLastState);
 };
 
-
-class NXWSettingsDialog : public QDialog
-{
-public:
-	NXWSettingsDialog(NXWToolset* parent, const char* name);
-};
-              
 class NXWAboutDialog : public QDialog
 {
 public:
