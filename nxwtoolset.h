@@ -23,7 +23,7 @@
 #endif
 
 #define APPNAME "NXW Toolset"
-#define APPVERSION "0.2"
+#define APPVERSION "0.3"
 #define NEWFILENAME "Untitled"
 #define NXWFILEOUT "nxwtoolset.out"
 #define ERR_PERMISSIONS "An error occured opening the file,\ncheck your file permissions."

@@ -82,7 +82,7 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
         QTextStream ts( &file );
         QString sLine, sName, sBrief, sParams, sAuthor, sSyntax, sDesc, sFirst, sJoin;
         bool bSectionFound = false;
-        QStringList slLine, slParams;
+        QStringList slLine, slParams, slFunction;
         while ((sLine = ts.readLine()) != NULL) {
                 /* Functions parsing */
                 if (sLine == "/*!") {
@@ -108,8 +108,13 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
                 sFirst = slLine.first();
                 slLine.remove(sFirst);
                 sJoin = slLine.join(" ");
-                if (sFirst == "\\name") sName = sJoin;
-                else if (sFirst == "\\brief") sBrief = sJoin;
+
+		if (sFirst == "\\fn") {
+			sSyntax = sJoin;
+			slFunction = QStringList::split("(", sJoin);
+			sName = slFunction.first();
+		} else if (sFirst == "\\name") sName = sJoin;
+		else if (sFirst == "\\brief") sBrief = sJoin;
                 else if (sFirst == "\\author") sAuthor = sJoin;
                 else if (sFirst == "\\syntax") sSyntax = sJoin;
                 else if (sFirst == "\\param") slParams.push_back(sJoin);
@@ -127,11 +132,42 @@ void NXWToolset::parseIncludeFile(QString sFilename, QString sFilter)
 
 void NXWToolset::loadData(QString sFilter)
 {
-        m_funcList->clear();
-        m_constList->clear();
-        m_funcMap->clear();
-        parseIncludeFile("small-scripts/include/noxwizard", sFilter);
-        parseIncludeFile("small-scripts/include/nxw_lib", sFilter);
+	//
+	// Clear all maps and lists
+	//
+	m_funcList->clear();
+	m_constList->clear();
+	m_funcMap->clear();
+	m_constMap->clear();
+
+
+	//
+	// Get files included by override.sma
+	//
+	QFile file("small-scripts/override.sma");
+
+        if ( !file.open( IO_ReadOnly ) ) return;
+	QTextStream ts( &file );
+	QString sLine, sLha, sRha;
+	QStringList slLine;
+
+	while ((sLine = ts.readLine()) != NULL) {
+		slLine = QStringList::split(" ", sLine);
+		sLha = slLine.first();
+		if ( sLha != "#include" )
+			continue;
+
+		slLine.pop_front();
+		sRha = slLine.first();
+		sRha.remove( "\"" );
+
+		//
+		// Parse the file
+		//
+		parseIncludeFile( sRha, sFilter );
+	}
+
+	file.close();
 }
 
 
